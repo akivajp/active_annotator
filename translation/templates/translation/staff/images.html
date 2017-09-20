@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+{% load lookup %}
+
+{% block title %}
+Project Video List
+{% endblock title %}
+
+{% block branding %}
+<a class="navbar-brand" href="{% url "manage:index" %}">{{ _("Project Management") }} </a>
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Project Video List</h2>
+        </div>
+        <div class="panel-body">
+
+          {% if images %}
+            <table class="table table-striped table-columns">
+              <tr>
+                {% for column in table_columns %}
+                <th class="text-{{column.align}}">
+                  {% if column.key %}
+                    {% if sort_key == column.key and reverse == '0' %}
+                      <a href="{% url "manage:images" project.id column.key 1 %}">{{ column.name }}</a>
+                    {% else %}
+                      <a href="{% url "manage:images" project.id column.key 0 %}">{{ column.name }}</a>
+                    {% endif %}
+                  {% else %}
+                    {{ column.name }}
+                  {% endif %}
+                </th>
+                {% endfor %}
+              </tr>
+              {% for image in images %}
+              <tr id="image{{image.id}}">
+                {% for column in table_columns %}
+                <td class="text-{{column.align}}">
+                  {% if column.type == "text" %}
+                  {{ image|lookup:column.key }}
+                  {% elif column.type == "toggle" %}
+                    {% if image|lookup:column.key %}
+                      <a href={% url "manage:toggle" image.id %}><span class="glyphicon glyphicon-check"></span></a>
+                    {% else %}
+                    <a href={% url "manage:toggle" image.id %}><span class="glyphicon glyphicon-unchecked"></span></a>
+                    {% endif %}
+                  {% elif column.type == "file" %}
+                    <a href="{% static image|lookup:column.key %}" target="_blank">{{ image|lookup:column.key }}</a>
+                  {% elif column.type == "editors" %}
+                    {% if image.caption_set.count > 0 %}
+                      <ul class="list-unstyled">
+                      {% for caption in image.caption_set.all %}
+                        <li><a href="{% url "annotate:edit" project.id caption.id %}">{{ caption.editor.username }}</li>
+                      {% endfor %}
+                      </ul>
+                    {% endif %}
+                  {% elif column.type == "caption" %}
+                  {{ image.get_caption_text }}
+                  {% elif column.type == "delete" %}
+                    <a class="btn btn-default btn-danger confirm-delete" data-url="{% url "manage:delete" "file" image.file.id %}" data-name='file "{{image.file.path}}"' data-tag_id="#image{{image.id}}">Delete</a>
+                    {% if forloop.parentloop.last %}
+                      <a name="{{forloop.parentloop.counter|add:1}}"></a>
+                    {% endif %}
+                  {% elif column.type == "reports" %}
+                  {% if image|lookup:column.key %}
+                    <a href="{% url "manage:reports" image.id %}">{{ image.report_set.count }}</a>
+                  {% else %}
+                    {{ image|lookup:column.key }}
+                  {% endif %}
+                  {% endif %}
+                </td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </table>
+          {% else %}
+            <div class="alert alert-warning">No images are currently available.</div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

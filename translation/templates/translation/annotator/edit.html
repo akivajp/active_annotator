@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+
+{% block title %}
+{{ _("Active Annotator - Translation Workspace") }}
+{% endblock title %}
+
+{% block branding %}
+<a class="navbar-brand" href="{% url "translation:index" %}">{{ _("Active Annotator - Translation Workspace") }} </a>
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Project Progress</h2>
+        </div>
+        <div class="panel-body">
+          <table class="table table-striped table-hover">
+            <tr>
+              <td class="fit">
+              <th class="fit">Source Words</th>
+              <th>Phrases</th>
+            </tr>
+            <tr>
+              <th nowrap>You translated (in this project):</th>
+              <td>{{ user_num_words }}</td>
+              <td>{{ user_translations.count }}</td>
+            </tr>
+            <tr>
+              <th nowrap>Total translations (in this project):</th>
+              <td>{{ project_num_words }}</td>
+              <td>{{ project_translations.count }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Translation</h2>
+        </div>
+        <div class="panel-body">
+          {% if phrase %}
+            <div class="alert alert-info">Please translate <b>the highlighted phrase (in {{ project.get_lang_trg_display }})</b>:</div>
+            <h3 class="h3">{{ phrase.get_highlighted|safe }}</h3>
+            <form action="{% url "translation:edit" project.id translation.id %}" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+              {% bootstrap_form form %}
+              {% if caption.text %}
+                {% bootstrap_button "Update" button_type="submit" button_class="btn-primary" %}
+              {% else %}
+                {% bootstrap_button "Submit" button_type="submit" button_class="btn-primary" %}
+              {% endif %}
+            </form>
+
+            <hr>
+            <a class="btn btn-warning show-button">Skip this annotation</a>
+            <div style="display: none;" class="appear">
+              <form action="{% url "translation:skip" translation.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% bootstrap_form report_form %}
+                {% bootstrap_button "Skip" button_type="submit" button_class="btn-warning" %}
+              </form>
+            </div>
+          {% else %}
+            <div class="alert alert-info">All phrases were translationd!</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+

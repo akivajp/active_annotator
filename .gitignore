@@ -1,0 +1,6 @@
+*.pyc
+*.sqlite3
+static/uploaded
+media/*
+*/migrations/0*.py
+

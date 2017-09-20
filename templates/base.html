@@ -1,0 +1,202 @@
+{% load bootstrap3 %}
+{% load i18n static %}<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
+<head>
+<title>{% block title %}base title{% endblock %}</title>
+<link rel="stylesheet" type="text/css" href="{% static "base.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "bootstrap-3.3.7/css/bootstrap.min.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "bootstrap-3.3.7/css/bootstrap-theme.min.css" %}" />
+{% block extrastyle %}{% endblock %}
+<script src="{% static "jquery/jquery-3.2.1.min.js" %}"></script>
+<script src="{% static "bootstrap-3.3.7/js/bootstrap.min.js" %}"></script>
+<script src="{% static "common.js" %}"></script>
+{% block extrahead %}{% endblock %}
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
+</head>
+{% load i18n %}
+
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
+  data-admin-utc-offset="{% now "Z" %}">
+
+<!-- Container -->
+<div class="container-fluid">
+
+    {% if not is_popup %}
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-default">
+      <div class="container">
+        <div class="navbar-header">
+          {% block branding %}{% endblock %}
+        </div>
+        {% block usertools %}
+        {% if user.is_authenticated %}
+        <ul class="nav navbar-nav navbar-right">
+          {% block welcome-msg %}
+          <li>
+            <a>
+              {% trans 'Welcome,' %}
+              <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+            </a>
+          </li>
+          {% endblock welcome-msg %}
+          {% block userlinks %}
+            {% if site_url %}
+              <li>
+                <a href="{{ site_url }}">{% trans 'View site' %}</a>
+              </li>
+            {% endif %}
+            {% if user.is_active and user.is_staff %}
+                {% url 'django-admindocs-docroot' as docsroot %}
+                {% if docsroot %}
+                    <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /
+                {% endif %}
+            {% endif %}
+            {% if user.has_usable_password %}
+            <li>
+              <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a>
+            </li>
+            {% endif %}
+            <li>
+              <a href="{% url 'accounts:logout' %}">{% trans 'Log out' %}</a>
+            </li>
+          {% endblock userlinks %}
+        </ul>
+        {% endif %}
+        {% endblock usertools %}
+        {% block nav-global %}{% endblock %}
+      </div>
+    </nav>
+
+    {% block breadcrumbs %}
+    {% if breadcrumbs %}
+    <ol class="breadcrumb">
+      {% for bread in breadcrumbs %}
+        {% if bread.url %}
+          {% if bread.args %}
+            <li><a href="{% url bread.url bread.args.0 %}">{{ bread.name }}</a></li>
+          {% else %}
+            <li><a href="{% url bread.url %}">{{ bread.name }}</a></li>
+          {% endif %}
+        {% else %}
+        <li class="active">{{ bread.name }}</li>
+        {% endif %}
+      {% endfor %}
+    </ol>
+    {% endif %}
+    {% endblock %}
+    {% endif %}
+
+    {% block messages %}
+      {% if messages %}
+        {% for message in messages %}
+          {% if message.tags == "success" %}
+          <div class="alert alert-success">{{ message }}</div>
+          {% elif message.tags == "warning" %}
+          <div class="alert alert-warning">{{ message }}</div>
+          {% elif message.tags == "error" %}
+          <div class="alert alert-danger">{{ message }}</div>
+          {% else %}
+          <div class="alert alert-info">{{ message }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endblock messages %}
+
+    {% block head_paginator %}
+    {% if page %}
+    <nav aria-label="Page navigation" class="text-center">
+      <ul class="pagination">
+        {% if page.previous_pages %}
+          <li class="page-item"><a class="page-link" href="?page={{page.previous_page_number}}">Previous</a></li>
+          {% for page_number in page.previous_pages %}
+            {% if forloop.first %}
+              {% if page_number != 1 %}
+                <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
+                <li class="page-item"><a class="page-link">...</a></li>
+              {% endif %}
+            {% endif %}
+            <li class="page-item"><a class="page-link" href="?page={{page_number}}">{{page_number}}</a></li>
+          {% endfor %}
+        {% else %}
+          <li class="page-item disabled"><a class="page-link">Previous</a></li>
+        {% endif %}
+
+        <li class="page-item active"><a class="page-link">{{page.number}}</a></li>
+        {% if page.following_pages %}
+          {% for page_number in page.following_pages %}
+            <li class="page-item"><a class="page-link" href="?page={{page_number}}">{{page_number}}</a></li>
+            {% if forloop.last %}
+              {% if page_number != page.paginator.num_pages %}
+                <li class="page-item"><a class="page-link">...</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{page.paginator.num_pages}}">{{page.paginator.num_pages}}</a></li>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          <li class="page-item"><a class="page-link" href="?page={{page.next_page_number}}">Next</a></li>
+        {% else %}
+          <li class="page-item disabled"><a class="page-link">Next</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+    {% endblock head_paginator %}
+
+    <!-- Content -->
+    <div id="content" class="{% block coltype %}colM{% endblock %}">
+        {% block pretitle %}{% endblock %}
+        {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+        {% block content %}
+        {% block object-tools %}{% endblock %}
+        {{ content }}
+        {% endblock %}
+        {% block sidebar %}{% endblock %}
+        <br class="clear" />
+    </div>
+    <!-- END Content -->
+
+    {% block foot_paginator %}
+    {% if page %}
+    <nav aria-label="Page navigation" class="text-center">
+      <ul class="pagination">
+        {% if page.previous_pages %}
+          <li class="page-item"><a class="page-link" href="?page={{page.previous_page_number}}">Previous</a></li>
+          {% for page_number in page.previous_pages %}
+            {% if forloop.first %}
+              {% if page_number != 1 %}
+                <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
+                <li class="page-item"><a class="page-link">...</a></li>
+              {% endif %}
+            {% endif %}
+            <li class="page-item"><a class="page-link" href="?page={{page_number}}">{{page_number}}</a></li>
+          {% endfor %}
+        {% else %}
+          <li class="page-item disabled"><a class="page-link">Previous</a></li>
+        {% endif %}
+
+        <li class="page-item active"><a class="page-link">{{page.number}}</a></li>
+        {% if page.following_pages %}
+          {% for page_number in page.following_pages %}
+            <li class="page-item"><a class="page-link" href="?page={{page_number}}">{{page_number}}</a></li>
+            {% if forloop.last %}
+              {% if page_number != page.paginator.num_pages %}
+                <li class="page-item"><a class="page-link">...</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{page.paginator.num_pages}}">{{page.paginator.num_pages}}</a></li>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          <li class="page-item"><a class="page-link" href="?page={{page.next_page_number}}">Next</a></li>
+        {% else %}
+          <li class="page-item disabled"><a class="page-link">Next</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+    {% endblock foot_paginator %}
+
+    {% block footer %}<div id="footer"></div>{% endblock %}
+</div>
+<!-- END Container -->
+
+</body>
+</html>

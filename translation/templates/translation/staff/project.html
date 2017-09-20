@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load bootstrap3 %}
+{% load static %}
+{% load head %}
+
+{% block title %}
+  {{ _("Active Annotator - Translation Project Management") }}
+{% endblock title %}
+
+{% block branding %}
+<a class="navbar-brand" href="{% url "translation:index" %}">{{ _("Active Annotator - Managint Translation Project: ") }} {{ project }} </a>
+{% endblock %}
+
+{% block content %}
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Proproces Corpora</h2>
+        </div>
+        <div class="panel-body">
+          {% if project.get_phrases_path %}
+            <h3 class="h3">Preprocess has been done!</h3>
+            <table class="table table-striped">
+              <tr>
+                <th class="col-md-1" nowrap>Translation Candidates: </th>
+                <td>
+                  {% for phrase in project.get_phrases|head:5 %}
+                    {{ phrase }}<br />
+                  {% endfor %}
+                </td>
+              </tr>
+            </table>
+          {% elif project.corpus_set.count > 0 %}
+            <h3 class="h3">The project is ready to start preprocess!</h3>
+            <a href="{% url "translation:preprocess" project.id %}" class="btn btn-primary">Start Preprocess (take a while)</a>
+          {% else %}
+            <h3 class="h3">Please upload the corpus!</h3>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Project Progress</h2>
+        </div>
+        <div class="panel-body">
+          <table class="table table-striped table-hover">
+            <tr>
+              <td class="fit"></td>
+              <th class="fit">Source Words (Tokens)</th>
+              <th>Phrases</th>
+            </tr>
+            <tr>
+              <th class="fit">Available: </th>
+              <td>{{ num_available_tokens }}</td>
+              <td>{{ phrases.count }}</td>
+            </tr>
+            <tr>
+              <th class="fit">Translated: </th>
+              <td>{{ num_translated_tokens }}</td>
+              <td>{{ translations.count }}</td>
+            </tr>
+            <tr>
+              <th class="fit">Confirmed: </th>
+              <td>{{ num_confirmed_tokens }}</td>
+              <td>{{ confirmed.count }}</td>
+            </tr>
+          </table>
+          <a class="btn btn-primary" href="{% url "translation:translations/project" project.id %}">Show all the translation</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Project Setting</h2>
+        </div>
+        <div class="panel-body">
+          <form method="POST" action="{% url "translation:update" "project" project.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form project_form %}
+            {% bootstrap_button "Update" button_type="submit" button_class="btn-primary" %}
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Main (Uncovered) Corpora</h2>
+        </div>
+        <div class="panel-body">
+          <div class="list-group">
+            {% for corpus in corpora %}
+              <table class="table table-striped" id="corpus{{corpus.id}}">
+                <tr>
+                  <th>Name: </th>
+                  <td><a href="{{ corpus.file }}" class="list-group-item">{{ corpus.name }}</a></td>
+                </tr>
+                <tr>
+                  <th>Digest: </th>
+                  <td>{{ corpus.get_digest|safe }}</td>
+                </tr>
+                <tr>
+                  <th>Delete: </th>
+                  <td>
+                    <a class="btn btn-default btn-danger confirm-delete" data-url="{% url "translation:ajax_delete" "corpus" corpus.id %}" data-name='corpus "{{corpus.name}}"' data-tag_id="#corpus{{corpus.id}}">Delete</a>
+                  </td>
+                </tr>
+              </table>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Base (Covered) Corpora</h2>
+        </div>
+        <div class="panel-body">
+          <div class="list-group">
+            {% for corpus in base_corpora %}
+              <table class="table table-striped" id="corpus{{corpus.id}}">
+                <tr>
+                  <th>Name: </th>
+                  <td><a href="{{ corpus.file }}" class="list-group-item">{{ corpus.name }}</a></td>
+                </tr>
+                <tr>
+                  <th>Digest: </th>
+                  <td>{{ corpus.get_digest|safe }}</td>
+                </tr>
+                <tr>
+                  <th>Delete: </th>
+                  <td>
+                    <a class="btn btn-default btn-danger confirm-delete" data-url="{% url "translation:ajax_delete" "corpus" corpus.id %}" data-name='corpus "{{corpus.name}}"' data-tag_id="#corpus{{corpus.id}}">Delete</a>
+                  </td>
+                </tr>
+              </table>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Upload New Corpus</h2>
+        </div>
+        <div class="panel-body">
+          <form method="POST" action="{% url "translation:upload" "corpus" %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form upload_form %}
+            {% bootstrap_form corpus_form %}
+            {% bootstrap_button "Upload" button_type="submit" button_class="btn-primary" %}
+          </form>
+        <div class="help-block">You can upload raw text file.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

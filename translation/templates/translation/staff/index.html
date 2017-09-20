@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load lookup %}
+
+{% block title %}
+  {{ _("Active Annotator - Translation Project Management") }}
+{% endblock title %}
+
+{% block branding %}
+<a class="navbar-brand" href="{% url "translation:index" %}">{{ _("Active Annotator - Translation Project Management") }} </a>
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Project List</h2>
+        </div>
+        <div class="panel-body">
+
+          {% if projects %}
+            <table class="table table-striped table-hover table-columns">
+              <tr>
+                {% for column in table_columns %}
+                <th class="text-{{column.align}}">
+                  {% if column.key %}
+                    {% if sort_key == column.key and reverse == '0' %}
+                      <a href="{% url "translation:index" column.key 1 %}">{{ column.name }}</a>
+                    {% else %}
+                      <a href="{% url "translation:index" column.key 0 %}">{{ column.name }}</a>
+                    {% endif %}
+                  {% else %}
+                    {{ column.name }}
+                  {% endif %}
+                </th>
+                {% endfor %}
+              </tr>
+              {% for project in projects %}
+                <tr id="project{{project.id}}">
+                  {% for column in table_columns %}
+                  <td class="text-{{column.align}}">
+                    {% if column.type == "text" %}
+                    {{ project|lookup:column.key }}
+                    {% elif column.type == "toggle" %}
+                      {% if project|lookup:column.key %}
+                        <a class="click-toggle" data-url="{% url "translation:ajax_toggle" column.key project.id %}" data-tag_id="#btn-project{{project.id}}"><span class="glyphicon glyphicon-check"></span></a>
+                      {% else %}
+                        <a class="click-toggle" data-url="{% url "translation:ajax_toggle" column.key project.id %}" data-tag_id="#btn-project{{project.id}}"><span class="glyphicon glyphicon-unchecked"></span></a>
+                      {% endif %}
+                    {% elif column.type == "editor" %}
+                    {{ video.editor_name }}
+                    {% elif column.type == "caption" %}
+                    {{ video.caption_text }}
+                    {% elif column.type == "delete" %}
+                      <a class="btn btn-default btn-danger confirm-delete" data-url="{% url "translation:ajax_delete" "project" project.id %}" data-name='project "{{project.name}}"' data-tag_id="#project{{project.id}}">Delete</a>
+                      {% if forloop.parentloop.last %}
+                        <a name="{{forloop.parentloop.counter|add:1}}"></a>
+                      {% endif %}
+                    {% elif column.type == "project" %}
+                      {% if project.active %}
+                        <a id="btn-project{{project.id}}" class="btn btn-primary" href="{% url "translation:project" project.id %}">{{ project.name }}</a>
+                      {% else %}
+                        <a id="btn-project{{project.id}}" class="btn btn-default" href="{% url "translation:project" project.id %}">{{ project.name }}</a>
+                      {% endif %}
+                    {% elif column.type == "images" %}
+                      <a href="{% url "translation:images" project.id %}">{{ project|lookup:column.key }}</a>
+                    {% elif column.type == "captions" %}
+                      <a href="{% url "translation:captions" project.id %}">{{ project|lookup:column.key }}</a>
+                    {% elif column.type == "progress" %}
+                      {% if project.image_set.count == 0 %}
+                        No Images
+                      {% else %}
+                        {% if project.get_caption_set.count == project.get_max_captions %}
+                          {% if project.get_confirm_progress == 100.0 %}
+                            Reviewing Completed
+                          {% else %}
+                            Reviewing ({{ project.get_confirm_progress }}%)
+                          {% endif %}
+                        {% else %}
+                         {{ project.get_caption_set.count }} / {{ project.get_max_captions }} ({{ project.get_progress }}%)
+                        {% endif %}
+                      {% endif %}
+                    {% elif column.type == "download" %}
+                      <a class="btn btn-primary" href="{% url "translation:csv" "captions" %}?project={{project.id}}">Download</a>
+                    {% endif %}
+                  </td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </table>
+          {% else %}
+            <div class="alert alert-warning">No projects are currently available.</div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Create New Project</h2>
+        </div>
+        <div class="panel-body">
+          {{ form2 }}
+          <form method="POST" action="{% url "translation:create" "project" %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form project_form %}
+            {% bootstrap_button "Create" button_type="submit" button_class="btn-primary" %}
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

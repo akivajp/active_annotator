@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+{% load lookup %}
+
+{% block title %}
+  {{ _("Active Annotator - Project Translation List") }}
+{% endblock title %}
+
+{% block branding %}
+<a class="navbar-brand" href="{% url "translation:index" %}">{{ _("Active Annotator - Project Translation List") }} </a>
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Project Annotation List</h2>
+        </div>
+        <div class="panel-body">
+
+          {% if translations %}
+            <table class="table table-striped table-columns">
+              <tr>
+                {% for column in table_columns %}
+                <th class="text-{{column.align}}">
+                  {% if column.key %}
+                    {% if sort_key == column.key and reverse == '0' %}
+                      <a href="{% url "translation:translations/project" project.id column.key 1 %}">{{ column.name }}</a>
+                    {% else %}
+                      <a href="{% url "translation:translations/project" project.id column.key 0 %}">{{ column.name }}</a>
+                    {% endif %}
+                  {% else %}
+                    {{ column.name }}
+                  {% endif %}
+                </th>
+                {% endfor %}
+              </tr>
+              {% for translation in translations %}
+              <tr>
+                {% for column in table_columns %}
+                <td class="text-{{column.align}}">
+                  {% if column.type == "text" %}
+                  {{ translation|lookup:column.key }}
+                  {% elif column.type == "toggle" %}
+                    {% if translation|lookup:column.key %}
+                      <a class="click-toggle" data-url="{% url "translation:ajax_toggle" column.key translation.id %}"><span class="glyphicon glyphicon-check"></span></a>
+                    {% else %}
+                      <a class="click-toggle" data-url="{% url "translation:ajax_toggle" column.key translation.id %}"><span class="glyphicon glyphicon-unchecked"></span></a>
+                    {% endif %}
+                  {% elif column.type == "file" %}
+                    <a href="{% static translation|lookup:column.key %}" target="_blank">{{ translation|lookup:column.key }}</a>
+                  {% elif column.type == "edit" %}
+                  <a name="edit{{translation.id}}" class="btn btn-default" href="{% url "translation:edit" translation.project.id translation.id %}">Edit</a>
+                  {% endif %}
+                </td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </table>
+          {% else %}
+            <div class="alert alert-warning">No translated phrases are currently available.</div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+

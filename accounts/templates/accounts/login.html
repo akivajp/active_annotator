@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+
+{% block branding %}
+<a class="navbar-brand">{{ _("Active MT Annotator") }}</a>
+{% endblock %}
+
+{% block title %}Active MT Annotator - Login{% endblock %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h2 class="panel-title">Project Login</h2>
+        </div>
+        <div class="panel-body">
+          <form action="{% url "accounts:login" %}" method="post" role="form">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% bootstrap_button "Login" button_type="submit" button_class="btn-primary" %}
+            <input name="next" type="hidden" value="{{ next | default:"/annotate/" }}" />
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
