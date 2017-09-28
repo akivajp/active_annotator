@@ -479,7 +479,7 @@ def preprocess(request, project_id):
     # parsing (if need)
     if project.select_method.find('struct') >= 0:
         ckylark = os.path.join(CKYLARK_PATH, 'src/bin/ckylark')
-        command = "cat %s | %s --model wsj" % (path_add_clean, ckylark)
+        command = "cat %s | %s --model wsj --add-root" % (path_add_clean, ckylark)
         path_add_parse = exec_safe(command, 'add.parse.src')
         if not path_add_parse:
             return HttpResponseRedirect(request.META.get("HTTP_REFERER"))
